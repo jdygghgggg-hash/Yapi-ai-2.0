@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>🤖 Yapi AI 2.0 — анекдот-машина</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', 'Inter', system-ui, sans-serif;
+            background: radial-gradient(circle at 20% 30%, #0d1b2a, #030712);
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            margin: 0;
+        }
+        .glass-card {
+            width: 100%;
+            max-width: 780px;
+            background: rgba(18, 28, 40, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 255, 0.25);
+            border-radius: 48px;
+            padding: 28px 24px;
+            box-shadow: 0 30px 50px rgba(0, 255, 255, 0.15), 0 0 0 2px rgba(0, 255, 255, 0.1) inset;
+            transition: all 0.2s;
+        }
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            text-align: center;
+            background: linear-gradient(135deg, #a0e9ff, #5f9eff, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 15px cyan;
+        }
+        .sub {
+            text-align: center;
+            color: #9bbdff;
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+            border-bottom: 1px dashed #3f6b9c;
+            padding-bottom: 12px;
+            font-style: italic;
+        }
+        .chat-box {
+            background: rgba(0, 8, 18, 0.6);
+            border-radius: 36px;
+            padding: 20px;
+            height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            border: 1px solid #2563eb40;
+            box-shadow: 0 0 30px #1e3a8a20 inset;
+            scroll-behavior: smooth;
+        }
+        .message {
+            max-width: 80%;
+            padding: 14px 20px;
+            border-radius: 30px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            box-shadow: 0 6px 12px rgba(0, 255, 255, 0.2);
+            animation: msgPop 0.2s ease;
+        }
+        @keyframes msgPop {
+            0% { transform: scale(0.95); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .user {
+            align-self: flex-end;
+            background: linear-gradient(145deg, #005f8c, #003b6f);
+            color: white;
+            border-bottom-right-radius: 8px;
+            border: 1px solid #00ccff;
+        }
+        .bot {
+            align-self: flex-start;
+            background: #1e2b47;
+            color: #d6eaff;
+            border-bottom-left-radius: 8px;
+            border-left: 6px solid #ffd966;
+            border: 1px solid #4f7eb3;
+        }
+        .input-line {
+            display: flex;
+            gap: 12px;
+            margin: 24px 0 16px;
+        }
+        #userInput {
+            flex: 1;
+            background: #0a1828;
+            border: 2px solid #3b6e9f;
+            border-radius: 60px;
+            padding: 18px 24px;
+            font-size: 1.2rem;
+            color: white;
+            outline: none;
+            transition: 0.15s;
+            box-shadow: 0 0 10px #0055ff40;
+        }
+        #userInput:focus {
+            border-color: #00ffff;
+            box-shadow: 0 0 20px cyan;
+        }
+        #sendBtn {
+            background: linear-gradient(145deg, #f5b042, #dd7e2b);
+            border: none;
+            border-radius: 60px;
+            width: 90px;
+            font-size: 2.5rem;
+            color: #0b1e2e;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #9b4b1f;
+            transition: 0.07s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #sendBtn:active {
+            transform: translateY(6px);
+            box-shadow: 0 2px 0 #9b4b1f;
+        }
+        .hint-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 8px;
+        }
+        .hint-chip {
+            background: #1d3145;
+            border-radius: 50px;
+            padding: 10px 22px;
+            font-size: 0.95rem;
+            color: #bbe1ff;
+            border: 1px solid #4d79b2;
+            box-shadow: 0 0 10px #2e6eb0;
+            transition: 0.1s;
+            cursor: default;
+            backdrop-filter: blur(5px);
+        }
+        .hint-chip:hover {
+            background: #264c6e;
+            color: white;
+            border-color: cyan;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            color: #719dcf;
+            font-size: 0.9rem;
+            font-weight: 300;
+        }
+    </style>
+</head>
+<body>
+    <div class="glass-card">
+        <h1>⚡ Yapi AI 2.0</h1>
+        <div class="sub">анекдот-машина • неон • для своих</div>
+
+        <div class="chat-box" id="chatBox">
+            <div class="message bot">Привет, брат! Спрашивай, обсудим всё — даже 45 FPS 😎</div>
+        </div>
+
+        <div class="input-line">
+            <input type="text" id="userInput" placeholder="Напиши сообщение..." autofocus>
+            <button id="sendBtn">➤</button>
+        </div>
+
+        <div class="hint-panel">
+            <span class="hint-chip">45 фпс</span>
+            <span class="hint-chip">процессор</span>
+            <span class="hint-chip">телефон</span>
+            <span class="hint-chip">шутка</span>
+            <span class="hint-chip">standoff</span>
+            <span class="hint-chip">black russia</span>
+            <span class="hint-chip">анекдот</span>
+        </div>
+
+        <div class="footer">
+            ✦ офлайн ✦ 30+ анекдотов ✦ создан для Yapi ✦
+        </div>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+
+        let history = [
+            { role: 'assistant', content: 'Привет, брат! Спрашивай, обсудим всё — даже 45 FPS 😎' }
+        ];
+
+        function addMessage(role, text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            msgDiv.innerText = text;
+            chatBox.appendChild(msgDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            history.push({ role, content: text });
+            if (history.length > 16) history.shift();
+        }
+
+        // ============== МАССИВ АНЕКДОТОВ (30+ ШТУК) ==============
+        const jokeList = [
+            "— Дорогой, а почему у тебя в телефоне я записана как «Пельмень»? — Ну ты же вкусная, красивая и от тебя так же трудно оторваться.",
+            "Вовочка, почему ты опоздал в школу? — Я видел сон, что побывал на другой планете. — И что, это причина? — А если бы я полетел, вы бы без меня начали урок?",
+            "— Алло, это служба поддержки? У меня компьютер завис. — А вы пробовали перезагрузить? — Пробовал, не помогло. — А вы пробовали выключить и включить розетку? — Пробовал, розетка говорит, что не её очередь.",
+            "Программист просыпается и видит: жена плачет. — Ты чего? — Ты меня во сне другой женщиной назвал! — Извини, это я просто функцию «поиск» во сне включил.",
+            "Встречаются два хакера: — Слышал, ты женился? — Да, взломал её сердце. — А пароль какой был? — «мама».",
+            "— Почему ваш сын плачет? — Он пытается забить гвоздь в розетку. — А почему вы его не остановите? — А зачем лишать ребёнка возможности прикоснуться к высоким технологиям?",
+            "Учительница: — Дети, придумайте предложение со словом «айфон». Вовочка: — Айфон упал в унитаз и теперь звонит снизу.",
+            "— Доктор, у меня телефон упал в воду. — Несите его в рис. — А вы уверены? — Конечно, я же гастроэнтеролог.",
+            "— Твой телефон опять завис? — Нет, он просто медитирует на тему 45 FPS.",
+            "— Как называется 45 FPS на Moto E15? — Стабильность!",
+            "— Почему твой телефон греется? — Он 45 FPS в Standoff выжимает, не до охлаждения!",
+            "GFX Tool — лучший друг владельца Moto E15.",
+            "45 FPS и точка — девиз Yapi.",
+            "— У тебя 120 FPS? — Нет, у меня 45, зато честных!",
+            "— Как заставить телефон работать быстрее? — Поставь его в угол и скажи, что он айфон.",
+            "— Что такое RAM Boost? — Это когда твой Moto E15 думает, что у него 6 ГБ ОЗУ. И мы в это верим.",
+            "— Почему ты не обновляешь телефон? — Потому что после обновления он может вспомнить, что у него только 2 ГБ ОЗУ.",
+            "— Чем Moto E15 лучше нового iPhone? — Он не боится упасть в ванну. Ну, почти.",
+            "— Что общего между 45 FPS и счастьем? — Их сложно достичь, но когда они есть — кайфуешь.",
+            "— Как понять, что ты геймер? — Ты знаешь, что такое троттлинг и как с ним бороться.",
+            "— Что сказал процессор, когда его разогнали? — Жарковато, брат!",
+            "— Почему телефон не хочет запускать Standoff 2? — Потому что знает, что ты опять будешь ругаться на тиммейтов.",
+            "— Как сделать 45 FPS стабильными? — Заморозить Google-сервисы, включить RAM Boost и молиться.",
+            "— В чём разница между Moto E15 и игровым ПК? — В цене и температуре.",
+            "— Что будет, если запустить Standoff 2 на максималках на Moto E15? — Получишь кипятильник.",
+            "— Почему у тебя телефон всегда горячий? — Потому что он работает, а не прохлаждается.",
+            "— Что сказал Hami, когда заморозил все Google-сервисы? — Дыши, телефон, дыши!",
+            "— Как назвать человека с Moto E15 и 45 FPS? — Оптимизатор.",
+            "— Что общего у твоего телефона и спорткара? — Оба быстро нагреваются.",
+            "— Почему ты не покупаешь новый телефон? — Этот ещё не расплавился."
+        ];
+
+        function botResponse(userMsg) {
+            const lower = userMsg.toLowerCase().trim();
+
+            // Время
+            if (lower.includes('время') || lower.includes('который час')) {
+                const now = new Date();
+                const time = now.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                return `Сейчас ${time}, бро.`;
+            }
+            // Дата
+            if (lower.includes('дата') || lower.includes('число') || lower.includes('какой день')) {
+                const now = new Date();
+                const date = now.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                return `Сегодня ${date}.`;
+            }
+            // 45 FPS
+            if (lower.includes('45 фпс') || lower.includes('45 кадров') || lower.includes('45fps')) {
+                return '45 FPS на Moto E15? Да это стабильнее, чем у некоторых на 120! Главное — вовремя GFX Tool прикрутить 😂';
+            }
+            if (lower.includes('фпс') && (lower.includes('мало') || lower.includes('пад') || lower.includes('низкий'))) {
+                return 'Да, FPS скачет, но ты же шаман — RAM Boost включил, фоновые прибил, уже лучше!';
+            }
+            // Телефон
+            if (lower.includes('телефон')) {
+                return 'Moto E15, 2 ГБ ОЗУ + RAM Boost до 6, Helio G81, 64 ГБ памяти. Зверь!';
+            }
+            // Процессор
+            if (lower.includes('процессор')) {
+                return 'Helio G81 — норм чип, особенно после заморозки Google-сервисов 😉';
+            }
+            // Standoff 2
+            if (lower.includes('standoff') || lower.includes('стандоф')) {
+                return 'Standoff 2 на твоём телефоне — это искусство. GFX Tool, Hami, 45 FPS и никаких читеров!';
+            }
+            // Black Russia
+            if (lower.includes('black russia') || lower.includes('блэк раша')) {
+                return 'О, Black Russia! Там у тебя семёрка, девятка, копейка с фарами. Легенда!';
+            }
+            // АНЕКДОТ (любой запрос про анекдот, шутку, прикол)
+            if (lower.includes('анекдот') || lower.includes('шутка') || lower.includes('прикол') || lower.includes('расскажи')) {
+                return jokeList[Math.floor(Math.random() * jokeList.length)];
+            }
+            // Приветствия
+            if (lower.includes('привет')) return 'Привет, брат! Как жизнь?';
+            if (lower.includes('как дела')) return 'У меня норм, жду твоих вопросов. А у тебя?';
+            if (lower.includes('хорошо') || lower.includes('норм')) return 'Круто, брат!';
+            // Спасибо
+            if (lower.includes('спасибо')) return 'Обращайся!';
+            // Пока
+            if (lower.includes('пока')) return 'Давай, брат! Заходи ещё.';
+            // Дефолт
+            return 'Хм... Расскажи подробнее, брат.';
+        }
+
+        function handleSend() {
+            const msg = userInput.value.trim();
+            if (!msg) return;
+            addMessage('user', msg);
+            userInput.value = '';
+            setTimeout(() => {
+                const reply = botResponse(msg);
+                addMessage('bot', reply);
+            }, 200);
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+
+        // Клики по подсказкам
+        document.querySelectorAll('.hint-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                userInput.value = chip.innerText;
+                handleSend();
+            });
+        });
+    </script>
+</body>
+</html>
